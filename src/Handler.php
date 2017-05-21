@@ -21,13 +21,23 @@ class Handler {
 
   const PRE_DRUPAL_L10N_CMD = 'pre-drupal-l10n-cmd';
   const POST_DRUPAL_L10N_CMD = 'post-drupal-l10n-cmd';
+  const DRUPAL_L10N_PACKAGE_TYPES = [
+    'drupal-core',
+    'drupal-module',
+    'drupal-theme',
+    'drupal-profile',
+  ];
 
   /**
+   * The composer object.
+   *
    * @var \Composer\Composer
    */
   protected $composer;
 
   /**
+   * The input output interface.
+   *
    * @var \Composer\IO\IOInterface
    */
   protected $io;
@@ -42,8 +52,10 @@ class Handler {
   /**
    * Handler constructor.
    *
-   * @param Composer $composer
-   * @param IOInterface $io
+   * @param \Composer\Composer $composer
+   *   The composer object.
+   * @param \Composer\IO\IOInterface $io
+   *   The input output interface.
    */
   public function __construct(Composer $composer, IOInterface $io) {
     $this->composer = $composer;
@@ -79,12 +91,12 @@ class Handler {
    *   A package event.
    */
   public function onPostPackageEvent(PackageEvent $event) {
-//    $package = $this->getCorePackage($event->getOperation());
-//    if ($package) {
-//      // By explicitly setting the core package, the onPostCmdEvent() will
-//      // process the scaffolding automatically.
-//      $this->drupalCorePackage = $package;
-//    }
+    //    $package = $this->getCorePackage($event->getOperation());
+    //    if ($package) {
+    //      // By explicitly setting the core package, the onPostCmdEvent() will
+    //      // process the scaffolding automatically.
+    //      $this->drupalCorePackage = $package;
+    //    }
   }
 
   /**
@@ -94,43 +106,55 @@ class Handler {
    *   A composer event.
    */
   public function onPostCmdEvent(Event $event) {
-//    // Only install the scaffolding if drupal/core was installed,
-//    // AND there are no scaffolding files present.
-//    if (isset($this->drupalCorePackage)) {
-//      $this->downloadLocalization();
-//    }
+    //    // Only install the scaffolding if drupal/core was installed,
+    //    // AND there are no scaffolding files present.
+    //    if (isset($this->drupalCorePackage)) {
+    //      $this->downloadLocalization($event->isDevMode());
+    //    }
   }
 
   /**
    * Downloads drupal localization files for the current process.
+   *
+   * @param bool $dev
+   *   TRUE if dev packages are installed. FALSE otherwise.
    */
-  public function downloadLocalization() {
+  public function downloadLocalization($dev = FALSE) {
     $drupalCorePackage = $this->getDrupalCorePackage();
     $webroot = realpath($this->getWebRoot());
 
-    // Collect options, excludes and settings files.
-    $options = $this->getOptions();
-    //    $files = array_diff($this->getIncludes(), $this->getExcludes());
-
-
-    //    'source' => 'http://cgit.drupalcode.org/drupal/plain/{path}?h={version}',
-    //    http://ftp.drupal.org/files/translations/8.x/ctools/ctools-8.x-3.0.fr.po
-    //    http://ftp.drupal.org/files/translations/{core_major_version}.x/{project_name}/{project_name}-{project_version}.{language}.po
-
-    // Need to convert composer project version to Drupal contrib version system.
-    // 3.0.0 => 8.x-3.0
+    // Prepare a list of Drupal project to download the translations.
+    $drupal_projects = [];
+    $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
+    foreach ($packages as $package) {
+      // Filter by the type of package.
+      if (in_array($package->getType(), $this::DRUPAL_L10N_PACKAGE_TYPES)) {
+        // Include development project or not.
+        if (!$package->isDev() || ($package->isDev() == $dev)) {
+          // We require the package to have a specific version.
+          $package_name = $package->getName();
+          $drupal_package_version = $this->extractPackageVersion($package->getName(), $package->getPrettyVersion());
+          if ($drupal_package_version) {
+            $drupal_projects[$package_name] = $drupal_package_version;
+          }
+        }
+      }
+    }
 
     // Call any pre-l10n scripts that may be defined.
     $dispatcher = new EventDispatcher($this->composer, $this->io);
     $dispatcher->dispatch(self::PRE_DRUPAL_L10N_CMD);
 
-    $version = $this->getDrupalCoreVersion($drupalCorePackage);
+    // Get the Drupal core version.
+    $core_version = $this->getDrupalCoreVersion($drupalCorePackage);
 
-    var_dump($options);
-    //    $remoteFs = new RemoteFilesystem($this->io);
+    // Collect options.
+    $options = $this->getOptions();
 
-    //    $fetcher = new FileFetcher($remoteFs, $options['source'], $files, $this->io, $this->composer->getConfig());
-    //    $fetcher->fetch($version, $webroot);
+    $remoteFs = new RemoteFilesystem($this->io);
+
+    $fetcher = new FileFetcher($remoteFs, $options, $core_version);
+    $fetcher->fetch($drupal_projects, $webroot . '/' . $options['destination']);
 
     // Call post-l10n scripts.
     $dispatcher->dispatch(self::POST_DRUPAL_L10N_CMD);
@@ -224,6 +248,39 @@ class Handler {
       'languages' => [],
     ];
     return $options;
+  }
+
+  /**
+   * Helper function to extract and convert a package version into a Drupal one.
+   *
+   * @param string $package_name
+   *   The package name.
+   * @param string $package_pretty_version
+   *   The package version as returned by $package->getPrettyVersion().
+   *
+   * @return false|string
+   *   FALSE if the package does not have a specific version (opposed to a
+   *   specific commit or a dev version).
+   */
+  protected function extractPackageVersion($package_name, $package_pretty_version) {
+    preg_match("/^(\d+)\.(\d+)\.(\d+)(-.*)?$/", $package_pretty_version, $parsed_version);
+    // Not a specific version.
+    if (empty($parsed_version)) {
+      return FALSE;
+    }
+
+    $major_version = $parsed_version[1];
+    $minor_version = $parsed_version[2];
+    $patch_version = $parsed_version[3];
+    $version_status = isset($parsed_version[4]) ? $parsed_version[4] : '';
+
+    // Special case for Drupal core.
+    if ($package_name == 'drupal/core') {
+      return $package_pretty_version;
+    }
+    else {
+      return $major_version . '.' . $minor_version . $version_status;
+    }
   }
 
 }

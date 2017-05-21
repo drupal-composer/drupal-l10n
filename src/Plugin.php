@@ -75,7 +75,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    */
   public static function download(Event $event) {
     $handler = new Handler($event->getComposer(), $event->getIO());
-    $handler->downloadLocalization();
+    $handler->downloadLocalization($event->isDevMode());
   }
 
 }
