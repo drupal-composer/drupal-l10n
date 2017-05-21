@@ -1,11 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \DrupalComposer\DrupalScaffold\Tests\PluginTest.
- */
-
-namespace DrupalComposer\DrupalScaffold\Tests;
+namespace DrupalComposer\DrupalL10n\Tests;
 
 use Composer\Util\Filesystem;
 

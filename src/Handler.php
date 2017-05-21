@@ -1,6 +1,6 @@
 <?php
 
-namespace DrupalComposer\DrupalScaffold;
+namespace DrupalComposer\DrupalL10n;
 
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;

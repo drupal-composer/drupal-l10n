@@ -1,18 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \DrupalComposer\DrupalScaffold\Tests\FetcherTest.
- */
-
-namespace DrupalComposer\DrupalScaffold\Tests;
+namespace DrupalComposer\DrupalL10n\Tests;
 
 use Composer\Downloader\TransportException;
 use Composer\IO\NullIO;
 use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
-use DrupalComposer\DrupalScaffold\FileFetcher;
-use DrupalComposer\DrupalScaffold\InitialFileFetcher;
+use DrupalComposer\DrupalL10n\FileFetcher;
 
 class FetcherTest extends \PHPUnit_Framework_TestCase {
 
@@ -91,9 +85,4 @@ class FetcherTest extends \PHPUnit_Framework_TestCase {
     $this->assertFileNotExists($this->tmpDir . '/.eslintrc');
   }
 
-  public function testInitialFetch() {
-    $fetcher = new InitialFileFetcher(new RemoteFilesystem(new NullIO()), 'http://cgit.drupalcode.org/drupal/plain/{path}?h={version}', ['sites/default/default.settings.php' => 'sites/default/settings.php']);
-    $fetcher->fetch('8.1.1', $this->tmpDir);
-    $this->assertFileExists($this->tmpDir . '/sites/default/settings.php');
-  }
 }
