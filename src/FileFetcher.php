@@ -1,11 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \DrupalComposer\DrupalScaffold\FileFetcher.
- */
-
-namespace DrupalComposer\DrupalScaffold;
+namespace DrupalComposer\DrupalL10n;
 
 use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
@@ -39,7 +34,7 @@ class FileFetcher {
   protected function getUri($filename, $version) {
     $map = [
       '{path}' => $filename,
-      '{version}' => $version
+      '{version}' => $version,
     ];
     return str_replace(array_keys($map), array_values($map), $this->source);
   }

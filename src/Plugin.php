@@ -1,10 +1,6 @@
 <?php
-/**
- * @file
- * Contains DrupalComposer\DrupalScaffold\Plugin.
- */
 
-namespace DrupalComposer\DrupalScaffold;
+namespace DrupalComposer\DrupalL10n;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
@@ -40,11 +36,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return array(
-      PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
-      PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
+      //      PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
+      //      PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
       //PackageEvents::POST_PACKAGE_UNINSTALL => 'postPackage',
       //ScriptEvents::POST_INSTALL_CMD => 'postCmd',
-      ScriptEvents::POST_UPDATE_CMD => 'postCmd',
+      //      ScriptEvents::POST_UPDATE_CMD => 'postCmd',
     );
   }
 
@@ -75,7 +71,6 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
   public static function scaffold(\Composer\Script\Event $event) {
     $handler = new Handler($event->getComposer(), $event->getIO());
     $handler->downloadScaffold();
-    // Generate the autoload.php file after generating the scaffold files.
-    $handler->generateAutoload();
   }
+
 }

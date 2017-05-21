@@ -1,6 +1,6 @@
 {
-    "name": "drupal-composer/drupal-scaffold",
-    "description": "Composer Plugin for updating the Drupal scaffold files when using drupal/core",
+    "name": "drupal-composer/drupal-l10n",
+    "description": "Composer Plugin for downloading Drupal translation files",
     "type": "composer-plugin",
     "license": "GPL-2.0+",
     "require": {
@@ -9,11 +9,11 @@
     },
     "autoload": {
         "psr-4": {
-            "DrupalComposer\\DrupalScaffold\\": "src/"
+            "DrupalComposer\\DrupalL10n\\": "src/"
         }
     },
     "extra": {
-        "class": "DrupalComposer\\DrupalScaffold\\Plugin",
+        "class": "DrupalComposer\\DrupalL10n\\Plugin",
         "branch-alias": {
             "dev-master": "2.0.x-dev"
         }
