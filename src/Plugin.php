@@ -8,15 +8,18 @@ use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
+use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
 
 /**
- * Composer plugin for handling drupal scaffold.
+ * Composer plugin for handling drupal translations.
  */
 class Plugin implements PluginInterface, EventSubscriberInterface {
 
   /**
-   * @var \DrupalComposer\DrupalScaffold\Handler
+   * Handler object that do the actual logic.
+   *
+   * @var \DrupalComposer\DrupalL10n\Handler
    */
   protected $handler;
 
@@ -36,11 +39,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return array(
-      //      PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
-      //      PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
-      //PackageEvents::POST_PACKAGE_UNINSTALL => 'postPackage',
-      //ScriptEvents::POST_INSTALL_CMD => 'postCmd',
-      //      ScriptEvents::POST_UPDATE_CMD => 'postCmd',
+      PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
+      PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
+      ScriptEvents::POST_UPDATE_CMD => 'postCmd',
     );
   }
 
@@ -48,6 +49,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    * Post package event behaviour.
    *
    * @param \Composer\Installer\PackageEvent $event
+   *   A package event object.
    */
   public function postPackage(PackageEvent $event) {
     $this->handler->onPostPackageEvent($event);
@@ -57,20 +59,23 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    * Post command event callback.
    *
    * @param \Composer\Script\Event $event
+   *   A composer script event object.
    */
-  public function postCmd(\Composer\Script\Event $event) {
+  public function postCmd(Event $event) {
     $this->handler->onPostCmdEvent($event);
   }
 
   /**
-   * Script callback for putting in composer scripts to download the
-   * scaffold files.
+   * Script callback for putting in composer scripts.
+   *
+   * Download the translation files.
    *
    * @param \Composer\Script\Event $event
+   *   Composer event.
    */
-  public static function scaffold(\Composer\Script\Event $event) {
+  public static function download(Event $event) {
     $handler = new Handler($event->getComposer(), $event->getIO());
-    $handler->downloadScaffold();
+    $handler->downloadLocalization();
   }
 
 }
