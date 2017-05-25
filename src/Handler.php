@@ -50,6 +50,13 @@ class Handler {
   protected $drupalCorePackage;
 
   /**
+   * The packages installed during a command execution.
+   *
+   * @var \Composer\Package\PackageInterface[]
+   */
+  protected $installedPackagesDuringCommand;
+
+  /**
    * Handler constructor.
    *
    * @param \Composer\Composer $composer
@@ -60,57 +67,36 @@ class Handler {
   public function __construct(Composer $composer, IOInterface $io) {
     $this->composer = $composer;
     $this->io = $io;
+    $this->installedPackagesDuringCommand = [];
   }
 
   /**
-   * Helper function to get the Drupal core package.
+   * Prepare a list of installed packages.
    *
-   * @param \Composer\DependencyResolver\Operation\OperationInterface $operation
-   *   The current operation object.
-   *
-   * @return null|\Composer\Package\PackageInterface
-   *   Returns the Drupal core package if found, NULL otherwise.
-   */
-  protected function getCorePackage(OperationInterface $operation) {
-    if ($operation instanceof InstallOperation) {
-      $package = $operation->getPackage();
-    }
-    elseif ($operation instanceof UpdateOperation) {
-      $package = $operation->getTargetPackage();
-    }
-    if (isset($package) && $package instanceof PackageInterface && $package->getName() == 'drupal/core') {
-      return $package;
-    }
-    return NULL;
-  }
-
-  /**
-   * Marks scaffolding to be processed after an install or update command.
+   * The localization for this packages will be downloaded after an install or
+   * update command.
    *
    * @param \Composer\Installer\PackageEvent $event
    *   A package event.
    */
   public function onPostPackageEvent(PackageEvent $event) {
-    //    $package = $this->getCorePackage($event->getOperation());
-    //    if ($package) {
-    //      // By explicitly setting the core package, the onPostCmdEvent() will
-    //      // process the scaffolding automatically.
-    //      $this->drupalCorePackage = $package;
-    //    }
+    $package = $this->getOperationPackage($event->getOperation());
+    if ($package) {
+      $this->installedPackagesDuringCommand[] = $package;
+    }
   }
 
   /**
-   * Post install command event to execute the scaffolding.
+   * Post install command event to execute the download localization.
    *
    * @param \Composer\Script\Event $event
    *   A composer event.
    */
   public function onPostCmdEvent(Event $event) {
-    //    // Only install the scaffolding if drupal/core was installed,
-    //    // AND there are no scaffolding files present.
-    //    if (isset($this->drupalCorePackage)) {
-    //      $this->downloadLocalization($event->isDevMode());
-    //    }
+    // Download localization for installed packages.
+    if (!empty($this->installedPackagesDuringCommand)) {
+      $this->downloadLocalization($event->isDevMode(), $this->installedPackagesDuringCommand);
+    }
   }
 
   /**
@@ -118,14 +104,26 @@ class Handler {
    *
    * @param bool $dev
    *   TRUE if dev packages are installed. FALSE otherwise.
+   * @param \Composer\Package\PackageInterface[] $packages
+   *   A list of Packages to download the localization. If empty, the
+   *   localization for all Drupal packages detected in the installation will be
+   *   downloaded.
    */
-  public function downloadLocalization($dev = FALSE) {
-    $drupalCorePackage = $this->getDrupalCorePackage();
+  public function downloadLocalization($dev = FALSE, array $packages = []) {
+    $drupal_core_package = $this->getDrupalCorePackage();
+    // Ensure drupal/core package is present.
+    if (is_null($drupal_core_package)) {
+      $this->io->writeError('The drupal/core package could not be found. Abort.');
+      return;
+    }
+
     $webroot = realpath($this->getWebRoot());
 
     // Prepare a list of Drupal project to download the translations.
     $drupal_projects = [];
-    $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
+    if (empty($packages)) {
+      $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
+    }
     foreach ($packages as $package) {
       // Filter by the type of package.
       if (in_array($package->getType(), $this::DRUPAL_L10N_PACKAGE_TYPES)) {
@@ -146,7 +144,7 @@ class Handler {
     $dispatcher->dispatch(self::PRE_DRUPAL_L10N_CMD);
 
     // Get the Drupal core version.
-    $core_version = $this->getDrupalCoreVersion($drupalCorePackage);
+    $core_version = $this->getDrupalCoreVersion($drupal_core_package);
 
     // Collect options.
     $options = $this->getOptions();
@@ -220,6 +218,28 @@ class Handler {
     $webroot = dirname($corePath);
 
     return $webroot;
+  }
+
+  /**
+   * Helper function to get the package of an operation.
+   *
+   * @param \Composer\DependencyResolver\Operation\OperationInterface $operation
+   *   The current operation object.
+   *
+   * @return false|\Composer\Package\PackageInterface
+   *   Returns the operation package if found, NULL otherwise.
+   */
+  protected function getOperationPackage(OperationInterface $operation) {
+    if ($operation instanceof InstallOperation) {
+      $package = $operation->getPackage();
+    }
+    elseif ($operation instanceof UpdateOperation) {
+      $package = $operation->getTargetPackage();
+    }
+    if (isset($package) && $package instanceof PackageInterface) {
+      return $package;
+    }
+    return FALSE;
   }
 
   /**
