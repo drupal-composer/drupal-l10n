@@ -10,102 +10,118 @@ use Composer\Util\Filesystem;
 class PluginTest extends \PHPUnit_Framework_TestCase {
 
   /**
+   * A file system object.
+   *
    * @var \Composer\Util\Filesystem
    */
   protected $fs;
 
   /**
+   * A path to temporary directory.
+   *
    * @var string
    */
   protected $tmpDir;
 
   /**
+   * The path to this package directory.
+   *
    * @var string
    */
   protected $rootDir;
 
   /**
+   * A random string to use as git tag.
+   *
    * @var string
    */
   protected $tmpReleaseTag;
 
   /**
-   * SetUp test
+   * SetUp test.
    */
   public function setUp() {
     $this->rootDir = realpath(realpath(__DIR__ . '/..'));
 
     // Prepare temp directory.
     $this->fs = new Filesystem();
-    $this->tmpDir = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . 'drupal-scaffold';
+    $this->tmpDir = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . 'drupal-l10n';
     $this->ensureDirectoryExistsAndClear($this->tmpDir);
 
     $this->writeTestReleaseTag();
-    $this->writeComposerJSON();
+    $this->writeComposerJson();
 
     chdir($this->tmpDir);
   }
 
   /**
-   * tearDown
-   *
-   * @return void
+   * Method tearDown.
    */
-  public function tearDown()
-  {
+  public function tearDown() {
     $this->fs->removeDirectory($this->tmpDir);
     $this->git(sprintf('tag -d "%s"', $this->tmpReleaseTag));
   }
 
   /**
-   * Tests a simple composer install without core, but adding core later.
+   * Tests a simple composer install and update.
    */
   public function testComposerInstallAndUpdate() {
-    $exampleScaffoldFile = $this->tmpDir . DIRECTORY_SEPARATOR . 'index.php';
-    $this->assertFileNotExists($exampleScaffoldFile, 'Scaffold file should not be exist.');
+    $version = '8.3.0';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
+    $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
+
+    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileNotExists($es_translation_file, 'Spanish translations file should not exist.');
     $this->composer('install');
     $this->assertFileExists($this->tmpDir . DIRECTORY_SEPARATOR . 'core', 'Drupal core is installed.');
-    $this->assertFileExists($exampleScaffoldFile, 'Scaffold file should be automatically installed.');
-    $this->fs->remove($exampleScaffoldFile);
-    $this->assertFileNotExists($exampleScaffoldFile, 'Scaffold file should not be exist.');
-    $this->composer('drupal-scaffold');
-    $this->assertFileExists($exampleScaffoldFile, 'Scaffold file should be installed by "drupal-scaffold" command.');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
+    $this->assertFileExists($es_translation_file, 'Spanish translations file should exist.');
 
-    foreach (['8.0.1', '8.1.x-dev'] as $version) {
-      // We touch a scaffold file, so we can check the file was modified after
-      // the scaffold update.
-      touch($exampleScaffoldFile);
-      $mtime_touched = filemtime($exampleScaffoldFile);
-      // Requiring a newer version triggers "composer update"
-      $this->composer('require --update-with-dependencies drupal/core:"' . $version .'"');
-      clearstatcache();
-      $mtime_after = filemtime($exampleScaffoldFile);
-      $this->assertNotEquals($mtime_after, $mtime_touched, 'Scaffold file was modified by composer update. (' . $version . ')');
-    }
+    // We touch a downloaded file, so we can check the file was modified after
+    // the custom command drupal-l10n has been executed.
+    touch($fr_translation_file);
+    clearstatcache();
+    $mtime_touched = filemtime($fr_translation_file);
+    $this->composer('drupal-l10n');
+    clearstatcache();
+    $mtime_after = filemtime($fr_translation_file);
+    $this->assertNotEquals($mtime_after, $mtime_touched, 'French translations file was modified by custom command.');
 
-    // We touch a scaffold file, so we can check the file was modified after
-    // the custom commandscaffold update.
-    touch($exampleScaffoldFile);
-    clearstatcache();
-    $mtime_touched = filemtime($exampleScaffoldFile);
-    $this->composer('drupal-scaffold');
-    clearstatcache();
-    $mtime_after = filemtime($exampleScaffoldFile);
-    $this->assertNotEquals($mtime_after, $mtime_touched, 'Scaffold file was modified by custom command.');
+    // Test downloading a new version of the translations.
+    $version = '8.3.1';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
+    $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
+    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
+    $this->composer('require --update-with-dependencies drupal/core:"' . $version . '"');
+    $this->assertFileExists($fr_translation_file, "French translations file for version: $version should exist.");
+    $this->assertFileExists($es_translation_file, "Spanish translations file for version: $version should exist.");
+
+    // Test that the translations for a dev version are not downloaded.
+    $version = '8.3.x-dev';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
+    $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
+    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
+    $this->composer('require --update-with-dependencies drupal/core:"' . $version . '"');
+    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
   }
 
   /**
    * Writes the default composer json to the temp direcoty.
    */
-  protected function writeComposerJSON() {
-    $json = json_encode($this->composerJSONDefaults(), JSON_PRETTY_PRINT);
+  protected function writeComposerJson() {
+    $json = json_encode($this->composerJsonDefaults(), JSON_PRETTY_PRINT);
     // Write composer.json.
     file_put_contents($this->tmpDir . '/composer.json', $json);
   }
 
   /**
-   * Writes a tag for the current commit, so we can reference it directly in the
-   * composer.json.
+   * Writes a tag for the current commit.
+   *
+   * So we can reference it directly in the composer.json.
    */
   protected function writeTestReleaseTag() {
     // Tag the current state.
@@ -117,32 +133,46 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
    * Provides the default composer.json data.
    *
    * @return array
+   *   An array to be transformed into JSON.
    */
-  protected function composerJSONDefaults() {
-    return array(
-      'repositories' => array(
-        array(
+  protected function composerJsonDefaults() {
+    return [
+      'repositories' => [
+        [
           'type' => 'vcs',
           'url' => $this->rootDir,
-        )
-      ),
-      'require' => array(
-        'drupal-composer/drupal-scaffold' => $this->tmpReleaseTag,
+        ],
+      ],
+      'require' => [
+        'drupal-composer/drupal-l10n' => $this->tmpReleaseTag,
         'composer/installers' => '^1.0.20',
-        'drupal/core' => '8.0.0',
-      ),
-      'scripts' => array(
-        'drupal-scaffold' =>  'DrupalComposer\\DrupalScaffold\\Plugin::scaffold'
-      ),
+        'drupal/core' => '8.3.0',
+      ],
+      'scripts' => [
+        'drupal-l10n' => 'DrupalComposer\\DrupalL10n\\Plugin::download',
+      ],
+      'extra' => [
+        'drupal-l10n' => [
+          'destination' => 'translations/contrib',
+          'languages' => [
+            'fr',
+            'es',
+          ],
+        ],
+      ],
       'minimum-stability' => 'dev',
-    );
+    ];
   }
 
   /**
    * Wrapper for the composer command.
    *
    * @param string $command
-   *   Composer command name, arguments and/or options
+   *   Composer command name, arguments and/or options.
+   *
+   * @throws \Exception
+   *   Throws an exception if there is an error during composer command
+   *   execution.
    */
   protected function composer($command) {
     chdir($this->tmpDir);
@@ -155,8 +185,11 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
   /**
    * Wrapper for git command in the root directory.
    *
-   * @param $command
+   * @param string $command
    *   Git command name, arguments and/or options.
+   *
+   * @throws \Exception
+   *   Throws an exception if there is an error during git command execution.
    */
   protected function git($command) {
     chdir($this->rootDir);
@@ -170,11 +203,13 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
    * Makes sure the given directory exists and has no content.
    *
    * @param string $directory
+   *   The directory to check.
    */
   protected function ensureDirectoryExistsAndClear($directory) {
     if (is_dir($directory)) {
       $this->fs->removeDirectory($directory);
     }
-    mkdir($directory, 0777, true);
+    mkdir($directory, 0777, TRUE);
   }
+
 }
