@@ -151,7 +151,7 @@ class Handler {
 
     $remoteFs = new RemoteFilesystem($this->io);
 
-    $fetcher = new FileFetcher($remoteFs, $options, $core_version);
+    $fetcher = new FileFetcher($this->io, $remoteFs, $options, $core_version);
     $fetcher->fetch($drupal_projects, $webroot . '/' . $options['destination']);
 
     // Call post-l10n scripts.

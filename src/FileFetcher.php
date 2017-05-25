@@ -3,6 +3,7 @@
 namespace DrupalComposer\DrupalL10n;
 
 use Composer\Downloader\TransportException;
+use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 
@@ -10,6 +11,13 @@ use Composer\Util\RemoteFilesystem;
  * File fetcher.
  */
 class FileFetcher {
+
+  /**
+   * The input output interface.
+   *
+   * @var \Composer\IO\IOInterface
+   */
+  protected $io;
 
   /**
    * The remote file system.
@@ -42,15 +50,18 @@ class FileFetcher {
   /**
    * FileFetcher constructor.
    *
-   * @param \Composer\Util\RemoteFilesystem $remoteFilesystem
+   * @param \Composer\IO\IOInterface $io
+   *   The input output interface.
+   * @param \Composer\Util\RemoteFilesystem $remote_file_system
    *   The remote file system.
    * @param array $options
    *   The composer plugin options.
    * @param string $core_version
    *   The Drupal core complete version.
    */
-  public function __construct(RemoteFilesystem $remoteFilesystem, array $options, $core_version) {
-    $this->remoteFilesystem = $remoteFilesystem;
+  public function __construct(IOInterface $io, RemoteFilesystem $remote_file_system, array $options, $core_version) {
+    $this->io = $io;
+    $this->remoteFilesystem = $remote_file_system;
     $this->options = $options;
     $this->coreMajorVersion = substr($core_version, 0, 1);
     $this->fs = new Filesystem();
@@ -75,11 +86,17 @@ class FileFetcher {
 
         // Fetch the file.
         try {
+          $this->io->write("Going to download the file from: $url");
           $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
+          // Used to put a new line because the remote file system does not put
+          // one.
+          $this->io->write('');
         }
         catch (TransportException $transportException) {
-          // TODO: print which file is downloaded, especially if there is an
-          // error. Certainly due to a non-existing translation file.
+          // Used to put a new line because the remote file system does not put
+          // one.
+          $this->io->write('');
+          $this->io->writeError('Could not download the file. This is certainly due to a non-existing translation file.');
         }
       }
     }
