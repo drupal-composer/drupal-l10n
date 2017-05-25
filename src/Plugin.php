@@ -38,11 +38,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    return array(
+    return [
       PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
       PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
       ScriptEvents::POST_UPDATE_CMD => 'postCmd',
-    );
+    ];
   }
 
   /**
