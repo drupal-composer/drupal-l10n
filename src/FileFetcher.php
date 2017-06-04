@@ -119,7 +119,7 @@ class FileFetcher {
    */
   protected function getFilename($package_name, $drupal_version, $drupal_project_name, $langcode) {
     // Special case for Drupal core.
-    if ($package_name == 'drupal/core') {
+    if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
       return 'drupal-' . $drupal_version . '.' . $langcode . '.po';
     }
     else {
@@ -144,7 +144,7 @@ class FileFetcher {
    */
   protected function getUrl($package_name, $drupal_version, $drupal_project_name, $langcode) {
     // Special case for Drupal core.
-    if ($package_name == 'drupal/core') {
+    if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
       return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/drupal-' . $drupal_version . '.' . $langcode . '.po';
     }
     else {

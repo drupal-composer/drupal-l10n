@@ -111,9 +111,9 @@ class Handler {
    */
   public function downloadLocalization($dev = FALSE, array $packages = []) {
     $drupal_core_package = $this->getDrupalCorePackage();
-    // Ensure drupal/core package is present.
+    // Ensure drupal core package is present.
     if (is_null($drupal_core_package)) {
-      $this->io->writeError('The drupal/core package could not be found. Abort.');
+      $this->io->writeError('The drupal core package could not be found. Abort.');
       return;
     }
 
@@ -181,7 +181,12 @@ class Handler {
    */
   public function getDrupalCorePackage() {
     if (!isset($this->drupalCorePackage)) {
+      // Drupal 8.
       $this->drupalCorePackage = $this->getPackage('drupal/core');
+      // Drupal 7.
+      if (is_null($this->drupalCorePackage)) {
+        $this->drupalCorePackage = $this->getPackage('drupal/drupal');
+      }
     }
     return $this->drupalCorePackage;
   }
@@ -214,8 +219,14 @@ class Handler {
     $drupalCorePackage = $this->getDrupalCorePackage();
     $installationManager = $this->composer->getInstallationManager();
     $corePath = $installationManager->getInstallPath($drupalCorePackage);
-    // Webroot is the parent path of the drupal core installation path.
-    $webroot = dirname($corePath);
+    if ($drupalCorePackage->getName() == 'drupal/drupal') {
+      $webroot = $corePath;
+    }
+    // Webroot is the parent path of the drupal core installation path for
+    // Drupal 8.
+    else {
+      $webroot = dirname($corePath);
+    }
 
     return $webroot;
   }
@@ -295,7 +306,7 @@ class Handler {
     $version_status = isset($parsed_version[4]) ? $parsed_version[4] : '';
 
     // Special case for Drupal core.
-    if ($package_name == 'drupal/core') {
+    if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
       return $package_pretty_version;
     }
     else {
