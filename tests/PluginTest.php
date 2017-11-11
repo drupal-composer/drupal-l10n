@@ -78,15 +78,11 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
     $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
     $this->assertFileExists($es_translation_file, 'Spanish translations file should exist.');
 
-    // We touch a downloaded file, so we can check the file was modified after
-    // the custom command drupal-l10n has been executed.
-    touch($fr_translation_file);
-    clearstatcache();
-    $mtime_touched = filemtime($fr_translation_file);
+    // We remove a downloaded file, so we can check the file was downloaded
+    // after the custom command drupal-l10n has been executed.
+    $this->fs->remove($fr_translation_file);
     $this->composer('drupal-l10n');
-    clearstatcache();
-    $mtime_after = filemtime($fr_translation_file);
-    $this->assertNotEquals($mtime_after, $mtime_touched, 'French translations file was modified by custom command.');
+    $this->assertFileExists($fr_translation_file, 'French translations file was downloaded by custom command.');
 
     // Test downloading a new version of the translations.
     $version = '8.3.1';
