@@ -161,6 +161,7 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
         ],
       ],
       'minimum-stability' => 'dev',
+      'prefer-stable' => TRUE,
     ];
   }
 
