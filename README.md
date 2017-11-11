@@ -1,5 +1,7 @@
 # drupal-l10n
 
+[![Build Status](https://travis-ci.org/FlorentTorregrosa/drupal-l10n.svg?branch=master)](https://travis-ci.org/FlorentTorregrosa/drupal-l10n)
+
 Composer plugin for automatically downloading Drupal translation files when 
 using Composer to manage Drupal projects.
 
