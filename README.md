@@ -49,3 +49,17 @@ translation files. By default the destination is
 `sites/default/files/translations`.
 
 The `languages` parameter specify the languages you want to retrieve.
+
+## Drupal configuration
+
+You can say to Drupal to not download translations files by updating your
+configuration on the pages:
+* `/admin/config/regional/translate/settings`: `Local files only` option
+* `/admin/config/media/file-system`: `Interface translations directory` field
+
+or by putting the following lines in your settings.php file:
+
+```php
+$config['locale.settings']['translation']['path'] = 'translations/contrib';
+$config['locale.settings']['translation']['use_source'] = 'local';
+```
