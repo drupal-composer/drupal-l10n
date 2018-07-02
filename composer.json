@@ -2,7 +2,7 @@
     "name": "drupal-composer/drupal-l10n",
     "description": "Composer Plugin for downloading Drupal translation files",
     "type": "composer-plugin",
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "require": {
         "php": ">=5.6",
         "composer-plugin-api": "^1.0.0"
