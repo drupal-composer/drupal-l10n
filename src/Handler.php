@@ -10,6 +10,7 @@ use Composer\EventDispatcher\EventDispatcher;
 use Composer\Installer\PackageEvent;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
+use Composer\Plugin\CommandEvent;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
@@ -54,7 +55,14 @@ class Handler {
    *
    * @var \Composer\Package\PackageInterface[]
    */
-  protected $installedPackagesDuringCommand;
+  protected $packagesInstalledDuringCommand;
+
+  /**
+   * A boolean indicating if progress should be displayed.
+   *
+   * @var bool
+   */
+  protected $progress;
 
   /**
    * Handler constructor.
@@ -67,7 +75,23 @@ class Handler {
   public function __construct(Composer $composer, IOInterface $io) {
     $this->composer = $composer;
     $this->io = $io;
-    $this->installedPackagesDuringCommand = [];
+    $this->packagesInstalledDuringCommand = [];
+    $this->progress = TRUE;
+  }
+
+  /**
+   * Get the command options.
+   *
+   * @param \Composer\Plugin\CommandEvent $event
+   *   The command event.
+   */
+  public function onCmdBeginsEvent(CommandEvent $event) {
+    if ($event->getInput()->hasOption('no-progress')) {
+      $this->progress = !($event->getInput()->getOption('no-progress'));
+    }
+    else {
+      $this->progress = TRUE;
+    }
   }
 
   /**
@@ -82,7 +106,7 @@ class Handler {
   public function onPostPackageEvent(PackageEvent $event) {
     $package = $this->getOperationPackage($event->getOperation());
     if ($package) {
-      $this->installedPackagesDuringCommand[] = $package;
+      $this->packagesInstalledDuringCommand[] = $package;
     }
   }
 
@@ -94,8 +118,8 @@ class Handler {
    */
   public function onPostCmdEvent(Event $event) {
     // Download localization for installed packages.
-    if (!empty($this->installedPackagesDuringCommand)) {
-      $this->downloadLocalization($event->isDevMode(), $this->installedPackagesDuringCommand);
+    if (!empty($this->packagesInstalledDuringCommand)) {
+      $this->downloadLocalization($event->isDevMode(), $this->packagesInstalledDuringCommand);
     }
   }
 
@@ -109,7 +133,7 @@ class Handler {
    *   localization for all Drupal packages detected in the installation will be
    *   downloaded.
    */
-  public function downloadLocalization($dev = FALSE, array $packages = []) {
+  public function downloadLocalization($dev = TRUE, array $packages = []) {
     $drupal_core_package = $this->getDrupalCorePackage();
     // Ensure drupal core package is present.
     if (is_null($drupal_core_package)) {
@@ -131,7 +155,7 @@ class Handler {
         if (!$package->isDev() || ($package->isDev() == $dev)) {
           // We require the package to have a specific version.
           $package_name = $package->getName();
-          $drupal_package_version = $this->extractPackageVersion($package->getName(), $package->getPrettyVersion());
+          $drupal_package_version = $this->extractPackageVersion($package_name, $package->getPrettyVersion());
           if ($drupal_package_version) {
             $drupal_projects[$package_name] = $drupal_package_version;
           }
@@ -151,7 +175,7 @@ class Handler {
 
     $remoteFs = new RemoteFilesystem($this->io);
 
-    $fetcher = new FileFetcher($this->io, $remoteFs, $options, $core_version);
+    $fetcher = new FileFetcher($this->io, $remoteFs, $options, $core_version, $this->progress);
     $fetcher->fetch($drupal_projects, $webroot . '/' . $options['destination']);
 
     // Call post-l10n scripts.

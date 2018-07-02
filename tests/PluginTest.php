@@ -81,7 +81,7 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
     // We remove a downloaded file, so we can check the file was downloaded
     // after the custom command drupal-l10n has been executed.
     $this->fs->remove($fr_translation_file);
-    $this->composer('drupal-l10n');
+    $this->composer('drupal:l10n');
     $this->assertFileExists($fr_translation_file, 'French translations file was downloaded by custom command.');
 
     // Test downloading a new version of the translations.
@@ -143,9 +143,6 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
         'drupal-composer/drupal-l10n' => $this->tmpReleaseTag,
         'composer/installers' => '^1.0.20',
         'drupal/core' => '8.3.0',
-      ],
-      'scripts' => [
-        'drupal-l10n' => 'DrupalComposer\\DrupalL10n\\Plugin::download',
       ],
       'extra' => [
         'drupal-l10n' => [
