@@ -97,7 +97,7 @@ class FileFetcher {
         // Fetch the file.
         try {
           if ($this->progress) {
-            $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ");
+            $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ", FALSE);
             $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
             // Used to put a new line because the remote file system does not
             // put one.
