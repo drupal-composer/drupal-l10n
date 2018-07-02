@@ -17,7 +17,7 @@ use Composer\Script\ScriptEvents;
 /**
  * Composer plugin for handling drupal translations.
  */
-class Plugin implements PluginInterface, EventSubscriberInterface, Capable  {
+class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
 
   /**
    * Handler object that do the actual logic.
