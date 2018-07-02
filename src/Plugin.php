@@ -7,6 +7,7 @@ use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
+use Composer\Plugin\CommandEvent;
 use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
@@ -54,6 +55,16 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
       ScriptEvents::POST_UPDATE_CMD => 'postCmd',
       PluginEvents::COMMAND => 'cmdBegins',
     ];
+  }
+
+  /**
+   * Command begins event callback.
+   *
+   * @param \Composer\Plugin\CommandEvent $event
+   *   The command event.
+   */
+  public function cmdBegins(CommandEvent $event) {
+    $this->handler->onCmdBeginsEvent($event);
   }
 
   /**
