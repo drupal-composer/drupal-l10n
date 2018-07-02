@@ -7,6 +7,7 @@ use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
+use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
@@ -37,11 +38,21 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCapabilities() {
+    return [
+      'Composer\Plugin\Capability\CommandProvider' => 'DrupalComposer\DrupalL10n\CommandProvider',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getSubscribedEvents() {
     return [
       PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
       PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
       ScriptEvents::POST_UPDATE_CMD => 'postCmd',
+      PluginEvents::COMMAND => 'cmdBegins',
     ];
   }
 
@@ -63,19 +74,6 @@ class Plugin implements PluginInterface, EventSubscriberInterface {
    */
   public function postCmd(Event $event) {
     $this->handler->onPostCmdEvent($event);
-  }
-
-  /**
-   * Script callback for putting in composer scripts.
-   *
-   * Download the translation files.
-   *
-   * @param \Composer\Script\Event $event
-   *   Composer event.
-   */
-  public static function download(Event $event) {
-    $handler = new Handler($event->getComposer(), $event->getIO());
-    $handler->downloadLocalization($event->isDevMode());
   }
 
 }

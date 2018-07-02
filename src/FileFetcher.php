@@ -48,6 +48,13 @@ class FileFetcher {
   protected $fs;
 
   /**
+   * A boolean indicating if progress should be displayed.
+   *
+   * @var bool
+   */
+  protected $progress;
+
+  /**
    * FileFetcher constructor.
    *
    * @param \Composer\IO\IOInterface $io
@@ -58,13 +65,16 @@ class FileFetcher {
    *   The composer plugin options.
    * @param string $core_version
    *   The Drupal core complete version.
+   * @param bool $progress
+   *   If the command has the progress displayed or not.
    */
-  public function __construct(IOInterface $io, RemoteFilesystem $remote_file_system, array $options, $core_version) {
+  public function __construct(IOInterface $io, RemoteFilesystem $remote_file_system, array $options, $core_version, $progress) {
     $this->io = $io;
     $this->remoteFilesystem = $remote_file_system;
     $this->options = $options;
     $this->coreMajorVersion = substr($core_version, 0, 1);
     $this->fs = new Filesystem();
+    $this->progress = $progress;
   }
 
   /**
@@ -86,11 +96,16 @@ class FileFetcher {
 
         // Fetch the file.
         try {
-          $this->io->write("Going to download the file from: $url");
-          $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
-          // Used to put a new line because the remote file system does not put
-          // one.
-          $this->io->write('');
+          if ($this->progress) {
+            $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ");
+            $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
+            // Used to put a new line because the remote file system does not
+            // put one.
+            $this->io->write('');
+          }
+          else {
+            $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
+          }
         }
         catch (TransportException $transportException) {
           // Used to put a new line because the remote file system does not put
