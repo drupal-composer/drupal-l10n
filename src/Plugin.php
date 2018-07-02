@@ -7,6 +7,7 @@ use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\Installer\PackageEvent;
 use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
+use Composer\Plugin\Capable;
 use Composer\Plugin\CommandEvent;
 use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
@@ -16,7 +17,7 @@ use Composer\Script\ScriptEvents;
 /**
  * Composer plugin for handling drupal translations.
  */
-class Plugin implements PluginInterface, EventSubscriberInterface {
+class Plugin implements PluginInterface, EventSubscriberInterface, Capable  {
 
   /**
    * Handler object that do the actual logic.
