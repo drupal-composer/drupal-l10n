@@ -33,6 +33,7 @@ class DrupalL10nCommand extends BaseCommand {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $handler = new Handler($this->getComposer(), $this->getIO());
     $handler->downloadLocalization(!$input->getOption('no-dev'));
+    return 0;
   }
 
 }
