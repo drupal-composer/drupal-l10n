@@ -54,6 +54,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
       PackageEvents::POST_PACKAGE_INSTALL => 'postPackage',
       PackageEvents::POST_PACKAGE_UPDATE => 'postPackage',
       ScriptEvents::POST_UPDATE_CMD => 'postCmd',
+      ScriptEvents::POST_INSTALL_CMD => 'postCmd',
       PluginEvents::COMMAND => 'cmdBegins',
     ];
   }
