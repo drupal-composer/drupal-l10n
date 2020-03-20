@@ -68,6 +68,7 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
   public function testComposerInstallAndUpdate() {
     $version = '8.3.0';
     $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'core';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
 
@@ -83,6 +84,13 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
     $this->fs->remove($fr_translation_file);
     $this->composer('drupal:l10n');
     $this->assertFileExists($fr_translation_file, 'French translations file was downloaded by custom command.');
+
+    // We remove a downloaded file and a package, so we can check the file was
+    // downloaded after the command install has been executed.
+    $this->fs->remove($fr_translation_file);
+    $this->fs->removeDirectory($core_directory);
+    $this->composer('install');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
 
     // Test downloading a new version of the translations.
     $version = '8.3.1';
