@@ -49,9 +49,6 @@ class PluginTest extends TestCase {
     $this->tmpDir = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . 'drupal-l10n';
     $this->ensureDirectoryExistsAndClear($this->tmpDir);
 
-    $this->git('config user.email "test@example.com"');
-    $this->git('config user.name "Test"');
-
     $this->writeTestReleaseTag();
     $this->writeComposerJson();
 
