@@ -48,6 +48,9 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
     $this->tmpDir = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . 'drupal-l10n';
     $this->ensureDirectoryExistsAndClear($this->tmpDir);
 
+    $this->git('config user.email "test@example.com"');
+    $this->git('config user.name "Test"');
+
     $this->writeTestReleaseTag();
     $this->writeComposerJson();
 
@@ -114,6 +117,35 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Tests that contrib modules are handled.
+   *
+   * Either if using semver or not.
+   */
+  public function testContribmodules() {
+    $core_version = '8.9.0';
+    $contrib_module = 'search404';
+    $contrib_composer_version = '1.0.0';
+    $contrib_drupal_version = '8.x-1.0';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+
+    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
+    $this->composer('install');
+    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($this->tmpDir . DIRECTORY_SEPARATOR . 'core', 'Drupal core is installed.');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
+
+    // Test downloading a semantic version of the module.
+    $contrib_composer_version = '2.0.0';
+    $contrib_drupal_version = '2.0.0';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should not exist.");
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should exist.");
+  }
+
+  /**
    * Writes the default composer json to the temp direcoty.
    */
   protected function writeComposerJson() {
@@ -145,6 +177,10 @@ class PluginTest extends \PHPUnit_Framework_TestCase {
         [
           'type' => 'vcs',
           'url' => $this->rootDir,
+        ],
+        [
+          'type' => 'composer',
+          'url' => 'https://packages.drupal.org/8',
         ],
       ],
       'require' => [
