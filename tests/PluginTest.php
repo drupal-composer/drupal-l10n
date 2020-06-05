@@ -3,11 +3,12 @@
 namespace DrupalComposer\DrupalL10n\Tests;
 
 use Composer\Util\Filesystem;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Tests composer plugin functionality.
  */
-class PluginTest extends \PHPUnit_Framework_TestCase {
+class PluginTest extends TestCase {
 
   /**
    * A file system object.
