@@ -156,7 +156,7 @@ class Handler {
           // We require the package to have a specific version.
           $package_name = $package->getName();
           $drupal_package_version = $this->extractPackageVersion($package_name, $package->getPrettyVersion());
-          if ($drupal_package_version) {
+          if (!empty($drupal_package_version)) {
             $drupal_projects[$package_name] = $drupal_package_version;
           }
         }
@@ -313,28 +313,35 @@ class Handler {
    * @param string $package_pretty_version
    *   The package version as returned by $package->getPrettyVersion().
    *
-   * @return false|string
-   *   FALSE if the package does not have a specific version (opposed to a
-   *   specific commit or a dev version).
+   * @return array
+   *   Empty array if the package does not have a specific version (opposed to a
+   *   specific commit or a dev version). Otherwise, version prepared for semver
+   *   or drupal format.
    */
   protected function extractPackageVersion($package_name, $package_pretty_version) {
     preg_match("/^(\d+)\.(\d+)\.(\d+)(-.*)?$/", $package_pretty_version, $parsed_version);
     // Not a specific version.
     if (empty($parsed_version)) {
-      return FALSE;
+      return [];
     }
-
-    $major_version = $parsed_version[1];
-    $minor_version = $parsed_version[2];
-    $patch_version = $parsed_version[3];
-    $version_status = isset($parsed_version[4]) ? $parsed_version[4] : '';
 
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
-      return $package_pretty_version;
+      return [
+        'drupal_format' => $package_pretty_version,
+        'semver_format' => $package_pretty_version,
+      ];
     }
     else {
-      return $major_version . '.' . $minor_version . $version_status;
+      $major_version = $parsed_version[1];
+      $minor_version = $parsed_version[2];
+      $patch_version = $parsed_version[3];
+      $version_status = isset($parsed_version[4]) ? $parsed_version[4] : '';
+
+      return [
+        'drupal_format' => $major_version . '.' . $minor_version . $version_status,
+        'semver_format' => $package_pretty_version,
+      ];
     }
   }
 
