@@ -88,30 +88,42 @@ class FileFetcher {
   public function fetch(array $drupal_projects, $destination) {
     $this->fs->ensureDirectoryExists($destination);
 
-    foreach ($drupal_projects as $package_name => $drupal_version) {
+    foreach ($drupal_projects as $package_name => $drupal_version_formats) {
       preg_match("/^.*\/(.*)$/", $package_name, $parsed_drupal_project_name);
       foreach ($this->options['languages'] as $langcode) {
-        $filename = $this->getFilename($package_name, $drupal_version, $parsed_drupal_project_name[1], $langcode);
-        $url = $this->getUrl($package_name, $drupal_version, $parsed_drupal_project_name[1], $langcode);
+        $number_of_formats = count($drupal_version_formats);
+        $exception_count = 0;
+        foreach ($drupal_version_formats as $format => $drupal_version) {
+          $filename = $this->getFilename($package_name, $drupal_version, $parsed_drupal_project_name[1], $langcode, $format);
+          $url = $this->getUrl($package_name, $parsed_drupal_project_name[1], $filename);
 
-        // Fetch the file.
-        try {
-          if ($this->progress) {
-            $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ", FALSE);
+          // Fetch the file.
+          try {
+            if ($this->progress) {
+              $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ", FALSE);
+            }
+
             $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
-            // Used to put a new line because the remote file system does not
-            // put one.
+
+            if ($this->progress) {
+              // Used to put a new line because the remote file system does not
+              // put one.
+              $this->io->write('');
+            }
+            // The file has been downloaded. No need to try other format.
+            break;
+          }
+          catch (TransportException $transportException) {
+            $exception_count++;
+            // Used to put a new line because the remote file system does not put
+            // one.
             $this->io->write('');
           }
-          else {
-            $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
-          }
         }
-        catch (TransportException $transportException) {
-          // Used to put a new line because the remote file system does not put
-          // one.
-          $this->io->write('');
-          $this->io->writeError('Could not download the file. This is certainly due to a non-existing translation file.');
+
+        // All URLs failed.
+        if ($exception_count == $number_of_formats) {
+          $this->io->writeError('Could not download the file in any managed formats. This is certainly due to a non-existing translation file.');
         }
       }
     }
@@ -128,17 +140,26 @@ class FileFetcher {
    *   The Drupal project name.
    * @param string $langcode
    *   The langcode.
+   * @param string $version_format
+   *   The format version. Either semver_format or drupal_format.
    *
    * @return string
    *   The prepared URL.
    */
-  protected function getFilename($package_name, $drupal_version, $drupal_project_name, $langcode) {
+  protected function getFilename($package_name, $drupal_version, $drupal_project_name, $langcode, $version_format) {
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
       return 'drupal-' . $drupal_version . '.' . $langcode . '.po';
     }
     else {
-      return $drupal_project_name . '-' . $this->coreMajorVersion . '.x-' . $drupal_version . '.' . $langcode . '.po';
+      // Old Drupal format.
+      if ($version_format == 'drupal_format') {
+        return $drupal_project_name . '-' . $this->coreMajorVersion . '.x-' . $drupal_version . '.' . $langcode . '.po';
+      }
+      // Semver format.
+      else {
+        return $drupal_project_name . '-' . $drupal_version . '.' . $langcode . '.po';
+      }
     }
   }
 
@@ -147,23 +168,21 @@ class FileFetcher {
    *
    * @param string $package_name
    *   The package name.
-   * @param string $drupal_version
-   *   The Drupal version of the package.
    * @param string $drupal_project_name
    *   The Drupal project name.
-   * @param string $langcode
-   *   The langcode.
+   * @param string $filename
+   *   The translation file name.
    *
    * @return string
    *   The prepared URL.
    */
-  protected function getUrl($package_name, $drupal_version, $drupal_project_name, $langcode) {
+  protected function getUrl($package_name, $drupal_project_name, $filename) {
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
-      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/drupal-' . $drupal_version . '.' . $langcode . '.po';
+      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/' . $filename;
     }
     else {
-      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/' . $drupal_project_name . '/' . $drupal_project_name . '-' . $this->coreMajorVersion . '.x-' . $drupal_version . '.' . $langcode . '.po';
+      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/' . $drupal_project_name . '/' . $filename;
     }
   }
 
