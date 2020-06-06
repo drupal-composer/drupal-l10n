@@ -89,9 +89,9 @@ class FileFetcher {
     $this->fs->ensureDirectoryExists($destination);
 
     foreach ($drupal_projects as $package_name => $drupal_version_formats) {
+      $number_of_formats = count($drupal_version_formats);
       preg_match("/^.*\/(.*)$/", $package_name, $parsed_drupal_project_name);
       foreach ($this->options['languages'] as $langcode) {
-        $number_of_formats = count($drupal_version_formats);
         $exception_count = 0;
         foreach ($drupal_version_formats as $format => $drupal_version) {
           $filename = $this->getFilename($package_name, $drupal_version, $parsed_drupal_project_name[1], $langcode, $format);
