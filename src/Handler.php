@@ -167,11 +167,16 @@ class Handler {
     $dispatcher = new EventDispatcher($this->composer, $this->io);
     $dispatcher->dispatch(self::PRE_DRUPAL_L10N_CMD);
 
-    // Get the Drupal core version.
-    $core_version = $this->getDrupalCoreVersion($drupal_core_package);
-
     // Collect options.
     $options = $this->getOptions();
+
+    // Get the Drupal core version.
+    if (!empty($options['core_version']) && preg_match('/[0-9]+\.x/', $options['core_version'])) {
+      $core_version = $options['core_version'];
+    }
+    else {
+      $core_version = $this->getDrupalCoreVersion($drupal_core_package);
+    }
 
     $remoteFs = new RemoteFilesystem($this->io);
 
@@ -301,6 +306,7 @@ class Handler {
     $options = $extra['drupal-l10n'] + [
       'destination' => 'sites/default/files/translations',
       'languages' => [],
+      'core_version' => '',
     ];
     return $options;
   }
