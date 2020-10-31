@@ -5,7 +5,7 @@ namespace DrupalComposer\DrupalL10n;
 use Composer\Downloader\TransportException;
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
-use Composer\Util\RemoteFilesystem;
+use Composer\Util\HttpDownloader;
 
 /**
  * File fetcher.
@@ -20,11 +20,11 @@ class FileFetcher {
   protected $io;
 
   /**
-   * The remote file system.
+   * The HTTP downloader.
    *
-   * @var \Composer\Util\RemoteFilesystem
+   * @var \Composer\Util\HttpDownloader
    */
-  protected $remoteFilesystem;
+  protected $httpDownloader;
 
   /**
    * An array of options containing the languages and the destination directory.
@@ -59,7 +59,7 @@ class FileFetcher {
    *
    * @param \Composer\IO\IOInterface $io
    *   The input output interface.
-   * @param \Composer\Util\RemoteFilesystem $remote_file_system
+   * @param \Composer\Util\HttpDownloader $http_downloader
    *   The remote file system.
    * @param array $options
    *   The composer plugin options.
@@ -68,9 +68,9 @@ class FileFetcher {
    * @param bool $progress
    *   If the command has the progress displayed or not.
    */
-  public function __construct(IOInterface $io, RemoteFilesystem $remote_file_system, array $options, $core_version, $progress) {
+  public function __construct(IOInterface $io, HttpDownloader $http_downloader, array $options, $core_version, $progress) {
     $this->io = $io;
-    $this->remoteFilesystem = $remote_file_system;
+    $this->httpDownloader = $http_downloader;
     $this->options = $options;
     $this->coreMajorVersion = substr($core_version, 0, 1);
     $this->fs = new Filesystem();
@@ -103,7 +103,7 @@ class FileFetcher {
               $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ", FALSE);
             }
 
-            $this->remoteFilesystem->copy($url, $url, $destination . '/' . $filename);
+            $this->httpDownloader->copy($url, $destination . '/' . $filename);
 
             if ($this->progress) {
               // Used to put a new line because the remote file system does not
@@ -179,10 +179,10 @@ class FileFetcher {
   protected function getUrl($package_name, $drupal_project_name, $filename) {
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
-      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/' . $filename;
+      return 'https://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/' . $filename;
     }
     else {
-      return 'http://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/' . $drupal_project_name . '/' . $filename;
+      return 'https://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/' . $drupal_project_name . '/' . $filename;
     }
   }
 

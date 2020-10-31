@@ -67,7 +67,7 @@ class PluginTest extends TestCase {
    * Tests a simple composer install and update.
    */
   public function testComposerInstallAndUpdate() {
-    $version = '8.3.0';
+    $version = '8.9.0';
     $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
     $core_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'core';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
@@ -94,7 +94,7 @@ class PluginTest extends TestCase {
     $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
 
     // Test downloading a new version of the translations.
-    $version = '8.3.1';
+    $version = '8.9.7';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
     $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
@@ -104,7 +104,7 @@ class PluginTest extends TestCase {
     $this->assertFileExists($es_translation_file, "Spanish translations file for version: $version should exist.");
 
     // Test that the translations for a dev version are not downloaded.
-    $version = '8.3.x-dev';
+    $version = '8.9.x-dev';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
     $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
@@ -183,8 +183,8 @@ class PluginTest extends TestCase {
       ],
       'require' => [
         'drupal-composer/drupal-l10n' => $this->tmpReleaseTag,
-        'composer/installers' => '^1.0.20',
-        'drupal/core' => '8.3.0',
+        'composer/installers' => '^1.2',
+        'drupal/core' => '8.9.0',
       ],
       'extra' => [
         'drupal-l10n' => [

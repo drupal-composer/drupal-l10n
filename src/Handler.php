@@ -13,7 +13,7 @@ use Composer\Package\PackageInterface;
 use Composer\Plugin\CommandEvent;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
-use Composer\Util\RemoteFilesystem;
+use Composer\Util\HttpDownloader;
 
 /**
  * Handler that do the actual stuff.
@@ -173,9 +173,9 @@ class Handler {
     // Collect options.
     $options = $this->getOptions();
 
-    $remoteFs = new RemoteFilesystem($this->io);
+    $httpDownloader = new HttpDownloader($this->io, $this->composer->getConfig());
 
-    $fetcher = new FileFetcher($this->io, $remoteFs, $options, $core_version, $this->progress);
+    $fetcher = new FileFetcher($this->io, $httpDownloader, $options, $core_version, $this->progress);
     $fetcher->fetch($drupal_projects, $webroot . '/' . $options['destination']);
 
     // Call post-l10n scripts.
