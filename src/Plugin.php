@@ -40,6 +40,18 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
   /**
    * {@inheritdoc}
    */
+  public function deactivate(Composer $composer, IOInterface $io) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function uninstall(Composer $composer, IOInterface $io) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCapabilities() {
     return [
       'Composer\Plugin\Capability\CommandProvider' => 'DrupalComposer\DrupalL10n\CommandProvider',
