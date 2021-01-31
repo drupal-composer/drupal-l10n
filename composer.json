@@ -9,7 +9,7 @@
     },
     "require-dev": {
         "composer/composer": "~2.0",
-        "phpunit/phpunit": "^6"
+        "phpunit/phpunit": "<10"
     },
     "extra": {
         "class": "DrupalComposer\\DrupalL10n\\Plugin"
