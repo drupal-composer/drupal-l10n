@@ -152,9 +152,18 @@ class FileFetcher {
       return 'drupal-' . $drupal_version . '.' . $langcode . '.po';
     }
     else {
+      $core_major_version = $this->coreMajorVersion;
+      // Starting from 8.x, translations are in
+      // https://ftp.drupal.org/files/translations/8.x/ even for Drupal 9.
+      // And we make the assumption that only a few contrib projects have a 9.x
+      // branch and will make a semver branch.
+      if ($core_major_version >= 8) {
+        $core_major_version = 8;
+      }
+
       // Old Drupal format.
       if ($version_format == 'drupal_format') {
-        return $drupal_project_name . '-' . $this->coreMajorVersion . '.x-' . $drupal_version . '.' . $langcode . '.po';
+        return $drupal_project_name . '-' . $core_major_version . '.x-' . $drupal_version . '.' . $langcode . '.po';
       }
       // Semver format.
       else {
@@ -179,10 +188,10 @@ class FileFetcher {
   protected function getUrl($package_name, $drupal_project_name, $filename) {
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
-      return 'https://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/drupal/' . $filename;
+      return 'https://ftp.drupal.org/files/translations/all/drupal/' . $filename;
     }
     else {
-      return 'https://ftp.drupal.org/files/translations/' . $this->coreMajorVersion . '.x/' . $drupal_project_name . '/' . $filename;
+      return 'https://ftp.drupal.org/files/translations/all/' . $drupal_project_name . '/' . $filename;
     }
   }
 

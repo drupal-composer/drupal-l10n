@@ -41,7 +41,7 @@ class PluginTest extends TestCase {
   /**
    * SetUp test.
    */
-  public function setUp() {
+  public function setUp() : void {
     $this->rootDir = realpath(realpath(__DIR__ . '/..'));
 
     // Prepare temp directory.
@@ -58,7 +58,7 @@ class PluginTest extends TestCase {
   /**
    * Method tearDown.
    */
-  public function tearDown() {
+  public function tearDown() : void {
     $this->fs->removeDirectory($this->tmpDir);
     $this->git(sprintf('tag -d "%s"', $this->tmpReleaseTag));
   }
@@ -141,6 +141,35 @@ class PluginTest extends TestCase {
     $this->assertFileNotExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should not exist.");
     $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
     $this->assertFileExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should exist.");
+  }
+
+  /**
+   * Tests that on Drupal 9, core and contrib modules are handled.
+   *
+   * Either if using semver or not.
+   */
+  public function testDrupal9() {
+    $core_version = '9.1.3';
+    $contrib_module = 'entity_share';
+    $contrib_composer_version = '3.0.0-beta2';
+    $contrib_drupal_version = '8.x-3.0-beta2';
+    $semver_contrib_module = 'entity_share_cron';
+    $semver_contrib_composer_version = '3.0.0-beta1';
+    $semver_contrib_drupal_version = '3.0.0-beta1';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+    $semver_fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $semver_contrib_module . '-' . $semver_contrib_drupal_version . '.fr.po';
+
+    $this->assertFileNotExists($core_translation_file, 'French translations file should not exist.');
+    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileNotExists($semver_fr_translation_file, 'French translations file should not exist.');
+    $this->composer('install');
+    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '" drupal/' . $semver_contrib_module . ':"' . $semver_contrib_composer_version . '"');
+    $this->assertFileExists($core_translation_file, 'French translations file should exist.');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
+    $this->assertFileExists($semver_fr_translation_file, 'French translations file should exist.');
   }
 
   /**
