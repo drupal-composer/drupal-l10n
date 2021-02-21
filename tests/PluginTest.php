@@ -173,7 +173,31 @@ class PluginTest extends TestCase {
   }
 
   /**
-   * Writes the default composer json to the temp direcoty.
+   * Tests that on Drupal 7, core and contrib modules are handled.
+   */
+  public function testDrupal7() {
+    $core_version = '7.78.0';
+    $contrib_module = 'views';
+    $contrib_composer_version = '3.24.0';
+    $contrib_drupal_version = '7.x-3.24';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+
+    $this->assertFileNotExists($core_translation_file, 'French translations file should not exist.');
+    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
+    $this->composer('install');
+    $this->composer('remove drupal/core');
+    // Set Drupal repository to target Drupal 7.
+    $this->composer('config repositories.drupal composer https://packages.drupal.org/7');
+    $this->composer('require drupal/drupal:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($core_translation_file, 'French translations file should exist.');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
+  }
+
+  /**
+   * Writes the default composer json to the temp directory.
    */
   protected function writeComposerJson() {
     $json = json_encode($this->composerJsonDefaults(), JSON_PRETTY_PRINT);
@@ -201,11 +225,11 @@ class PluginTest extends TestCase {
   protected function composerJsonDefaults() {
     return [
       'repositories' => [
-        [
+        'this_package' => [
           'type' => 'vcs',
           'url' => $this->rootDir,
         ],
-        [
+        'drupal' => [
           'type' => 'composer',
           'url' => 'https://packages.drupal.org/8',
         ],
