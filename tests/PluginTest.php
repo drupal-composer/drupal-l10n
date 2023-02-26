@@ -67,14 +67,14 @@ class PluginTest extends TestCase {
    * Tests a simple composer install and update.
    */
   public function testComposerInstallAndUpdate() {
-    $version = '8.9.0';
+    $version = '9.5.0';
     $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
     $core_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'core';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
 
-    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
-    $this->assertFileNotExists($es_translation_file, 'Spanish translations file should not exist.');
+    $this->assertFileDoesNotExist($fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($es_translation_file, 'Spanish translations file should not exist.');
     $this->composer('install');
     $this->assertFileExists($this->tmpDir . DIRECTORY_SEPARATOR . 'core', 'Drupal core is installed.');
     $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
@@ -94,24 +94,24 @@ class PluginTest extends TestCase {
     $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
 
     // Test downloading a new version of the translations.
-    $version = '8.9.7';
+    $version = '9.5.3';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
-    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
-    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($es_translation_file, "Spanish translations file for version: $version should not exist.");
     $this->composer('require --update-with-dependencies drupal/core:"' . $version . '"');
     $this->assertFileExists($fr_translation_file, "French translations file for version: $version should exist.");
     $this->assertFileExists($es_translation_file, "Spanish translations file for version: $version should exist.");
 
     // Test that the translations for a dev version are not downloaded.
-    $version = '8.9.x-dev';
+    $version = '9.5.x-dev';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.fr.po';
     $es_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $version . '.es.po';
-    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
-    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($es_translation_file, "Spanish translations file for version: $version should not exist.");
     $this->composer('require --update-with-dependencies drupal/core:"' . $version . '"');
-    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $version should not exist.");
-    $this->assertFileNotExists($es_translation_file, "Spanish translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($fr_translation_file, "French translations file for version: $version should not exist.");
+    $this->assertFileDoesNotExist($es_translation_file, "Spanish translations file for version: $version should not exist.");
   }
 
   /**
@@ -120,50 +120,21 @@ class PluginTest extends TestCase {
    * Either if using semver or not.
    */
   public function testContribmodules() {
-    $core_version = '8.9.0';
-    $contrib_module = 'search404';
-    $contrib_composer_version = '1.0.0';
-    $contrib_drupal_version = '8.x-1.0';
-    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
-    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
-
-    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
-    $this->composer('install');
-    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
-    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
-    $this->assertFileExists($this->tmpDir . DIRECTORY_SEPARATOR . 'core', 'Drupal core is installed.');
-    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
-
-    // Test downloading a semantic version of the module.
-    $contrib_composer_version = '2.0.0';
-    $contrib_drupal_version = '2.0.0';
-    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
-    $this->assertFileNotExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should not exist.");
-    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
-    $this->assertFileExists($fr_translation_file, "French translations file for version: $contrib_drupal_version should exist.");
-  }
-
-  /**
-   * Tests that on Drupal 9, core and contrib modules are handled.
-   *
-   * Either if using semver or not.
-   */
-  public function testDrupal9() {
-    $core_version = '9.1.3';
+    $core_version = '9.5.3';
     $contrib_module = 'entity_share';
-    $contrib_composer_version = '3.0.0-beta2';
-    $contrib_drupal_version = '8.x-3.0-beta2';
+    $contrib_composer_version = '3.0.0-rc4';
+    $contrib_drupal_version = '8.x-3.0-rc4';
     $semver_contrib_module = 'entity_share_cron';
-    $semver_contrib_composer_version = '3.0.0-beta1';
-    $semver_contrib_drupal_version = '3.0.0-beta1';
+    $semver_contrib_composer_version = '3.0.1';
+    $semver_contrib_drupal_version = '3.0.1';
     $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
     $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
     $semver_fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $semver_contrib_module . '-' . $semver_contrib_drupal_version . '.fr.po';
 
-    $this->assertFileNotExists($core_translation_file, 'French translations file should not exist.');
-    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
-    $this->assertFileNotExists($semver_fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($core_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($semver_fr_translation_file, 'French translations file should not exist.');
     $this->composer('install');
     $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
     $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '" drupal/' . $semver_contrib_module . ':"' . $semver_contrib_composer_version . '"');
@@ -184,8 +155,8 @@ class PluginTest extends TestCase {
     $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
     $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
 
-    $this->assertFileNotExists($core_translation_file, 'French translations file should not exist.');
-    $this->assertFileNotExists($fr_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($core_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($fr_translation_file, 'French translations file should not exist.');
     $this->composer('install');
     $this->composer('remove drupal/core');
     // Set Drupal repository to target Drupal 7.
@@ -236,8 +207,14 @@ class PluginTest extends TestCase {
       ],
       'require' => [
         'drupal-composer/drupal-l10n' => $this->tmpReleaseTag,
-        'composer/installers' => '^1.2',
-        'drupal/core' => '8.9.0',
+        'composer/installers' => '2.*',
+        'drupal/core' => '9.5.0',
+      ],
+      'config'=> [
+        'allow-plugins' => [
+          'composer/installers' => TRUE,
+          'drupal-composer/drupal-l10n' => TRUE,
+        ],
       ],
       'extra' => [
         'drupal-l10n' => [

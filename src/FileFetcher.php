@@ -189,7 +189,7 @@ class FileFetcher {
     $core_folder = 'all';
     // Starting from 8.x, translations are in
     // https://ftp.drupal.org/files/translations/all/ even for Drupal 9.
-    // Otherwise it is https://ftp.drupal.org/files/translations/7.x/.
+    // Otherwise, it is https://ftp.drupal.org/files/translations/7.x/.
     if ($this->coreMajorVersion < 8) {
       $core_folder = $this->coreMajorVersion . '.x';
     }
