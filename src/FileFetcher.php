@@ -72,9 +72,10 @@ class FileFetcher {
     $this->io = $io;
     $this->httpDownloader = $http_downloader;
     $this->options = $options;
-    $this->coreMajorVersion = substr($core_version, 0, 1);
     $this->fs = new Filesystem();
     $this->progress = $progress;
+    $parsed_core_version = \explode('.', $core_version);
+    $this->coreMajorVersion = array_shift($parsed_core_version);
   }
 
   /**

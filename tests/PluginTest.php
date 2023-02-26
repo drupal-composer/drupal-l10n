@@ -168,6 +168,27 @@ class PluginTest extends TestCase {
   }
 
   /**
+   * Tests that on Drupal 10, core and contrib modules are handled.
+   */
+  public function testDrupal10() {
+    $core_version = '10.0.3';
+    $contrib_module = 'speedboxes';
+    $contrib_composer_version = '1.3.0';
+    $contrib_drupal_version = '8.x-1.3';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
+    $fr_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+
+    $this->assertFileDoesNotExist($core_translation_file, 'French translations file should not exist.');
+    $this->assertFileDoesNotExist($fr_translation_file, 'French translations file should not exist.');
+    $this->composer('install');
+    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($core_translation_file, 'French translations file should exist.');
+    $this->assertFileExists($fr_translation_file, 'French translations file should exist.');
+  }
+
+  /**
    * Writes the default composer json to the temp directory.
    */
   protected function writeComposerJson() {
