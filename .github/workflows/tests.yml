@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: ["2.0.x"]
+  pull_request:
+    branches: ["2.0.x"]
+
+env:
+  COMPOSER_MEMORY_LIMIT: -1
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions:
+          - '8.1'
+        drupal-release:
+          - 'stable'
+        composer-channel:
+          - 'stable'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI Test"
+
+      - name: Run test suite
+        run: vendor/bin/phpunit
