@@ -104,6 +104,8 @@ class FileFetcher {
               $this->io->write("  - <info>$filename</info> (<comment>$url</comment>): ", FALSE);
             }
 
+            // Test that the file exists before trying to copy it.
+            $this->httpDownloader->get($url);
             $this->httpDownloader->copy($url, $destination . '/' . $filename);
 
             if ($this->progress) {
