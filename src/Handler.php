@@ -328,8 +328,8 @@ class Handler {
     // Special case for Drupal core.
     if (in_array($package_name, ['drupal/core', 'drupal/drupal'])) {
       return [
-        'drupal_format' => $package_pretty_version,
         'semver_format' => $package_pretty_version,
+        'drupal_format' => $package_pretty_version,
       ];
     }
     else {
@@ -339,8 +339,8 @@ class Handler {
       $version_status = isset($parsed_version[4]) ? $parsed_version[4] : '';
 
       return [
-        'drupal_format' => $major_version . '.' . $minor_version . $version_status,
         'semver_format' => $package_pretty_version,
+        'drupal_format' => $major_version . '.' . $minor_version . $version_status,
       ];
     }
   }
