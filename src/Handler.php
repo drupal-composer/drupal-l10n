@@ -150,6 +150,13 @@ class Handler {
 
     $webroot = realpath($this->getWebRoot());
 
+    // Collect options.
+    $options = $this->getOptions();
+
+    // The command line option takes precedence, but the composer.json setting
+    // can enable this mode as well.
+    $coreOnly = $coreOnly || !empty($options['core-only']);
+
     // Prepare a list of Drupal project to download the translations.
     $drupal_projects = [];
     if (empty($packages)) {
@@ -180,9 +187,6 @@ class Handler {
 
     // Get the Drupal core version.
     $core_version = $this->getDrupalCoreVersion($drupal_core_package);
-
-    // Collect options.
-    $options = $this->getOptions();
 
     $httpDownloader = new HttpDownloader($this->io, $this->composer->getConfig());
 
@@ -312,6 +316,7 @@ class Handler {
     $options = $extra['drupal-l10n'] + [
       'destination' => 'sites/default/files/translations',
       'languages' => [],
+      'core-only' => FALSE,
     ];
     return $options;
   }

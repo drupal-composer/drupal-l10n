@@ -40,6 +40,7 @@ of your root `composer.json`.
   "extra": {
     "drupal-l10n": {
       "destination": "translations/contrib",
+      "core-only": true,
       "languages": [
         "fr",
         "es"
@@ -54,6 +55,9 @@ translation files. By default the destination is
 `sites/default/files/translations`.
 
 The `languages` parameter specify the languages you want to retrieve.
+
+The `core-only` parameter (default `false`) limits downloads to Drupal core
+translations only, and skips contrib modules/themes/profiles.
 
 ## Drupal configuration
 

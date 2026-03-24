@@ -172,6 +172,38 @@ class PluginTest extends TestCase {
   }
 
   /**
+   * Tests that core-only option from composer.json skips contrib translations.
+   */
+  public function testCoreOnlyOptionFromComposerJson() {
+    $composer_json = $this->composerJsonDefaults();
+    $composer_json['extra']['drupal-l10n']['core-only'] = TRUE;
+    $this->writeComposerJson($composer_json);
+
+    $core_version = '9.5.3';
+    $contrib_module = 'entity_share';
+    $contrib_composer_version = '3.0.0-rc4';
+    $contrib_drupal_version = '8.x-3.0-rc4';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
+    $contrib_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+
+    $this->composer('install');
+    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after install.');
+    $this->assertFileExists($contrib_translation_file, 'Contrib translation should exist after install.');
+
+    $this->fs->remove($core_translation_file);
+    $this->fs->remove($contrib_translation_file);
+    $this->assertFileDoesNotExist($core_translation_file, 'Drupal core translation should not exist after removal.');
+    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist after removal.');
+
+    $this->composer('drupal:l10n');
+    $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after composer.json core-only mode.');
+    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist after composer.json core-only mode.');
+  }
+
+  /**
    * Tests that on Drupal 7, core and contrib modules are handled.
    */
   public function testDrupal7() {
@@ -219,8 +251,11 @@ class PluginTest extends TestCase {
   /**
    * Writes the default composer json to the temp directory.
    */
-  protected function writeComposerJson() {
-    $json = json_encode($this->composerJsonDefaults(), JSON_PRETTY_PRINT);
+  protected function writeComposerJson(array $composer_json = NULL) {
+    if (is_null($composer_json)) {
+      $composer_json = $this->composerJsonDefaults();
+    }
+    $json = json_encode($composer_json, JSON_PRETTY_PRINT);
     // Write composer.json.
     file_put_contents($this->tmpDir . '/composer.json', $json);
   }
