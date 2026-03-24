@@ -144,6 +144,34 @@ class PluginTest extends TestCase {
   }
 
   /**
+   * Tests that core-only option skips contrib translations.
+   */
+  public function testCoreOnlyOption() {
+    $core_version = '9.5.3';
+    $contrib_module = 'entity_share';
+    $contrib_composer_version = '3.0.0-rc4';
+    $contrib_drupal_version = '8.x-3.0-rc4';
+    $translations_directory = $this->tmpDir . DIRECTORY_SEPARATOR . 'translations' . DIRECTORY_SEPARATOR . 'contrib';
+    $core_translation_file = $translations_directory . DIRECTORY_SEPARATOR . 'drupal-' . $core_version . '.fr.po';
+    $contrib_translation_file = $translations_directory . DIRECTORY_SEPARATOR . $contrib_module . '-' . $contrib_drupal_version . '.fr.po';
+
+    $this->composer('install');
+    $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
+    $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after install.');
+    $this->assertFileExists($contrib_translation_file, 'Contrib translation should exist after install.');
+
+    $this->fs->remove($core_translation_file);
+    $this->fs->remove($contrib_translation_file);
+    $this->assertFileDoesNotExist($core_translation_file, 'Drupal core translation should not exist after removal.');
+    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist after removal.');
+
+    $this->composer('drupal:l10n --core-only');
+    $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after --core-only command.');
+    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist after --core-only command.');
+  }
+
+  /**
    * Tests that on Drupal 7, core and contrib modules are handled.
    */
   public function testDrupal7() {
