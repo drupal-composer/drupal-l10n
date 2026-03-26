@@ -236,6 +236,9 @@ class PluginTest extends TestCase {
           'composer/installers' => TRUE,
           'drupal-composer/drupal-l10n' => TRUE,
         ],
+        'audit' => [
+          'block-insecure' => FALSE,
+        ],
       ],
       'extra' => [
         'drupal-l10n' => [
