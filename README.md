@@ -25,6 +25,11 @@ projects installed. It also runs on `composer require` command.
 You can manually download the localization files according to your configuration
 by using `composer drupal:l10n`.
 
+If you only need Drupal core translations (for example so Drush can detect and
+install languages), use:
+
+`composer drupal:l10n --core-only`
+
 ## Configuration
 
 You can configure the plugin by providing some settings in the `extra` section
@@ -35,6 +40,7 @@ of your root `composer.json`.
   "extra": {
     "drupal-l10n": {
       "destination": "translations/contrib",
+      "core-only": true,
       "languages": [
         "fr",
         "es"
@@ -49,6 +55,9 @@ translation files. By default the destination is
 `sites/default/files/translations`.
 
 The `languages` parameter specify the languages you want to retrieve.
+
+The `core-only` parameter (default `false`) limits downloads to Drupal core
+translations only, and skips contrib modules/themes/profiles.
 
 ## Drupal configuration
 

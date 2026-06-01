@@ -24,6 +24,7 @@ class DrupalL10nCommand extends BaseCommand {
       ->setDescription('Download Drupal translations files.')
       ->setDefinition([
         new InputOption('no-dev', NULL, InputOption::VALUE_NONE, 'Disables download of translations of require-dev dependencies.'),
+        new InputOption('core-only', NULL, InputOption::VALUE_NONE, 'Downloads translations for Drupal core only (skip contrib modules/themes/profiles).'),
       ]);
   }
 
@@ -32,7 +33,7 @@ class DrupalL10nCommand extends BaseCommand {
    */
   protected function execute(InputInterface $input, OutputInterface $output): int {
     $handler = new Handler($this->getComposer(), $this->getIO());
-    $handler->downloadLocalization(!$input->getOption('no-dev'));
+    $handler->downloadLocalization(!$input->getOption('no-dev'), [], $input->getOption('core-only'));
     return 0;
   }
 

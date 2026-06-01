@@ -28,6 +28,10 @@ class Handler {
     'drupal-theme',
     'drupal-profile',
   ];
+  const DRUPAL_CORE_PACKAGE_NAMES = [
+    'drupal/core',
+    'drupal/drupal',
+  ];
 
   /**
    * The composer object.
@@ -132,8 +136,11 @@ class Handler {
    *   A list of Packages to download the localization. If empty, the
    *   localization for all Drupal packages detected in the installation will be
    *   downloaded.
+  * @param bool $coreOnly
+  *   TRUE to download Drupal core localization only. FALSE to include contrib
+  *   projects.
    */
-  public function downloadLocalization($dev = TRUE, array $packages = []) {
+  public function downloadLocalization($dev = TRUE, array $packages = [], $coreOnly = FALSE) {
     $drupal_core_package = $this->getDrupalCorePackage();
     // Ensure drupal core package is present.
     if (is_null($drupal_core_package)) {
@@ -143,12 +150,23 @@ class Handler {
 
     $webroot = realpath($this->getWebRoot());
 
+    // Collect options.
+    $options = $this->getOptions();
+
+    // The command line option takes precedence, but the composer.json setting
+    // can enable this mode as well.
+    $coreOnly = $coreOnly || !empty($options['core-only']);
+
     // Prepare a list of Drupal project to download the translations.
     $drupal_projects = [];
     if (empty($packages)) {
       $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
     }
     foreach ($packages as $package) {
+      if ($coreOnly && !in_array($package->getName(), self::DRUPAL_CORE_PACKAGE_NAMES)) {
+        continue;
+      }
+
       // Filter by the type of package.
       if (in_array($package->getType(), $this::DRUPAL_L10N_PACKAGE_TYPES)) {
         // Include development project or not.
@@ -169,9 +187,6 @@ class Handler {
 
     // Get the Drupal core version.
     $core_version = $this->getDrupalCoreVersion($drupal_core_package);
-
-    // Collect options.
-    $options = $this->getOptions();
 
     $httpDownloader = new HttpDownloader($this->io, $this->composer->getConfig());
 
@@ -301,6 +316,7 @@ class Handler {
     $options = $extra['drupal-l10n'] + [
       'destination' => 'sites/default/files/translations',
       'languages' => [],
+      'core-only' => FALSE,
     ];
     return $options;
   }
