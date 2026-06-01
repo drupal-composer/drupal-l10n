@@ -190,13 +190,13 @@ class PluginTest extends TestCase {
     $this->composer('install');
     $this->composer('require --update-with-dependencies drupal/core:"' . $core_version . '"');
     $this->composer('require drupal/' . $contrib_module . ':"' . $contrib_composer_version . '"');
+    // With core-only set in composer.json, hooks already skip contrib.
     $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after install.');
-    $this->assertFileExists($contrib_translation_file, 'Contrib translation should exist after install.');
+    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist when core-only is set.');
 
+    // Remove core translation to verify drupal:l10n also honours the setting.
     $this->fs->remove($core_translation_file);
-    $this->fs->remove($contrib_translation_file);
     $this->assertFileDoesNotExist($core_translation_file, 'Drupal core translation should not exist after removal.');
-    $this->assertFileDoesNotExist($contrib_translation_file, 'Contrib translation should not exist after removal.');
 
     $this->composer('drupal:l10n');
     $this->assertFileExists($core_translation_file, 'Drupal core translation should exist after composer.json core-only mode.');
